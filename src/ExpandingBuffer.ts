@@ -1,4 +1,4 @@
-import { Buffer } from 'node:buffer'
+import { Buffer } from 'buffer'
 import { EMPTY_BUFFER } from './constants'
 import { clamp } from './functions'
 

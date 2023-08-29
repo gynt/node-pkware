@@ -1,5 +1,5 @@
-import { Buffer } from 'node:buffer'
-import { Transform, TransformCallback } from 'node:stream'
+import { Buffer } from 'buffer'
+import { Transform, TransformCallback } from 'stream'
 import {
   ChBitsAsc,
   ChCodeAsc,

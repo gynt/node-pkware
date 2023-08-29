@@ -1,5 +1,5 @@
-import { Transform, Writable, TransformCallback } from 'node:stream'
-import { promisify } from 'node:util'
+import { Transform, Writable, TransformCallback } from 'stream'
+import { promisify } from 'util'
 import { isFunction } from './functions'
 import { ExpandingBuffer } from './ExpandingBuffer'
 import { EMPTY_BUFFER } from './constants'
