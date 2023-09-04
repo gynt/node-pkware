@@ -8,26 +8,26 @@ export class ExpandingBuffer {
   #endIndex: number = 0
   #backup: { startIndex: number; endIndex: number } = {
     startIndex: 0,
-    endIndex: 0,
+    endIndex: 0
   }
 
-  constructor(numberOfBytes: number = 0) {
+  constructor (numberOfBytes: number = 0) {
     this.#heap = Buffer.allocUnsafe(numberOfBytes)
   }
 
-  #getActualData(offset: number = 0) {
+  getActualData (offset: number = 0) {
     return this.#heap.subarray(this.#startIndex + offset, this.#endIndex)
   }
 
-  size() {
+  size () {
     return this.#endIndex - this.#startIndex
   }
 
-  isEmpty() {
+  isEmpty () {
     return this.size() === 0
   }
 
-  heapSize() {
+  heapSize () {
     return this.#heap.byteLength
   }
 
@@ -36,7 +36,7 @@ export class ExpandingBuffer {
    *
    * If offset is negative, then the method calculates the index from the end backwards
    */
-  setByte(offset: number, value: number) {
+  setByte (offset: number, value: number) {
     if (offset < 0) {
       if (this.#endIndex + offset < this.#startIndex) {
         return
@@ -51,7 +51,7 @@ export class ExpandingBuffer {
     }
   }
 
-  appendByte(value: number) {
+  appendByte (value: number) {
     if (this.#endIndex + 1 < this.heapSize()) {
       this.#heap[this.#endIndex] = value
       this.#endIndex += 1
@@ -60,7 +60,7 @@ export class ExpandingBuffer {
 
     const blockSize = 0x1000
 
-    const currentData = this.#getActualData()
+    const currentData = this.getActualData()
 
     this.#heap = Buffer.allocUnsafe((Math.ceil((currentData.byteLength + 1) / blockSize) + 1) * blockSize)
     currentData.copy(this.#heap, 0)
@@ -69,7 +69,7 @@ export class ExpandingBuffer {
     this.#endIndex = currentData.byteLength + 1
   }
 
-  append(newData: Buffer) {
+  append (newData: Buffer) {
     if (this.#endIndex + newData.byteLength < this.heapSize()) {
       newData.copy(this.#heap, this.#endIndex)
       this.#endIndex += newData.byteLength
@@ -78,10 +78,10 @@ export class ExpandingBuffer {
 
     const blockSize = 0x1000
 
-    const currentData = this.#getActualData()
+    const currentData = this.getActualData()
 
     this.#heap = Buffer.allocUnsafe(
-      (Math.ceil((currentData.byteLength + newData.byteLength) / blockSize) + 1) * blockSize,
+      (Math.ceil((currentData.byteLength + newData.byteLength) / blockSize) + 1) * blockSize
     )
     currentData.copy(this.#heap, 0)
     newData.copy(this.#heap, currentData.byteLength)
@@ -93,7 +93,7 @@ export class ExpandingBuffer {
   /**
    * Watch out! The returned slice of Buffer points to the same Buffer in memory!
    */
-  read(offset: number = 0, limit: number = this.size()) {
+  read (offset: number = 0, limit: number = this.size()) {
     if (offset < 0 || limit < 1) {
       return EMPTY_BUFFER
     }
@@ -102,10 +102,10 @@ export class ExpandingBuffer {
       return this.#heap.subarray(this.#startIndex + offset, this.#startIndex + limit + offset)
     }
 
-    return this.#getActualData(offset)
+    return this.getActualData(offset)
   }
 
-  readByte(offset: number = 0) {
+  readByte (offset: number = 0) {
     return this.#heap[this.#startIndex + offset]
   }
 
@@ -116,7 +116,7 @@ export class ExpandingBuffer {
    * by copying bytes to lower indices making sure the
    * startIndex goes back to 0 afterwards
    */
-  flushStart(numberOfBytes: number) {
+  flushStart (numberOfBytes: number) {
     numberOfBytes = clamp(0, this.heapSize(), numberOfBytes)
     if (numberOfBytes > 0) {
       if (numberOfBytes < this.heapSize()) {
@@ -134,7 +134,7 @@ export class ExpandingBuffer {
    * Removes data from the end of the internal buffer (heap)
    * by moving the endIndex back
    */
-  flushEnd(numberOfBytes: number) {
+  flushEnd (numberOfBytes: number) {
     const clampedNumberOfBytes = clamp(0, this.heapSize(), numberOfBytes)
     if (clampedNumberOfBytes > 0) {
       this.#endIndex -= clampedNumberOfBytes
@@ -148,7 +148,7 @@ export class ExpandingBuffer {
    * by moving the startIndex forward
    * When the heap gets empty it also resets the indices as a cleanup
    */
-  dropStart(numberOfBytes: number) {
+  dropStart (numberOfBytes: number) {
     if (numberOfBytes <= 0) {
       return
     }
@@ -166,7 +166,7 @@ export class ExpandingBuffer {
    * by moving the endIndex back
    * When the heap gets empty it also resets the indices as a cleanup
    */
-  dropEnd(numberOfBytes: number) {
+  dropEnd (numberOfBytes: number) {
     if (numberOfBytes <= 0) {
       return
     }
@@ -180,21 +180,21 @@ export class ExpandingBuffer {
   /**
    * returns the internal buffer
    */
-  getHeap() {
+  getHeap () {
     return this.#heap
   }
 
-  clear() {
+  clear () {
     this.#startIndex = 0
     this.#endIndex = 0
   }
 
-  saveIndices() {
+  saveIndices () {
     this.#backup.startIndex = this.#startIndex
     this.#backup.endIndex = this.#endIndex
   }
 
-  restoreIndices() {
+  restoreIndices () {
     this.#startIndex = this.#backup.startIndex
     this.#endIndex = this.#backup.endIndex
   }

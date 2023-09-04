@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+import { Buffer } from 'buffer'
 /**
  * Compression types for implode
  */

@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer'
+import { Buffer, TranscodeEncoding as BufferEncoding } from 'buffer'
 import { Transform, TransformCallback } from 'stream'
 import {
   ChBitsAsc,
@@ -11,7 +11,7 @@ import {
   ExLenBits,
   LenBits,
   LenCode,
-  LONGEST_ALLOWED_REPETITION,
+  LONGEST_ALLOWED_REPETITION
 } from './constants'
 import { InvalidCompressionTypeError, InvalidDictionarySizeError } from './errors'
 import { ExpandingBuffer } from './ExpandingBuffer'
@@ -50,7 +50,7 @@ const findRepetitions = (inputBytes: Buffer, endOfLastMatch: number, cursor: num
     const distance = cursor - endOfLastMatch - matchIndex
     return {
       distance: distance - 1,
-      size: distance > 2 ? getSizeOfMatching(inputBytes, endOfLastMatch + matchIndex, cursor) : 2,
+      size: distance > 2 ? getSizeOfMatching(inputBytes, endOfLastMatch + matchIndex, cursor) : 2
     }
   }
 
@@ -75,7 +75,7 @@ export class Implode {
   #nChBits: number[] = repeat(0, 0x306)
   #nChCodes: number[] = repeat(0, 0x306)
 
-  constructor(compressionType: Compression, dictionarySize: DictionarySize, config: Config) {
+  constructor (compressionType: Compression, dictionarySize: DictionarySize, config: Config) {
     if (!(compressionType in Compression) || compressionType === Compression.Unknown) {
       throw new InvalidCompressionTypeError()
     }
@@ -91,7 +91,7 @@ export class Implode {
     this.#outputBuffer = new ExpandingBuffer(config?.outputBufferSize ?? 0)
   }
 
-  getHandler() {
+  getHandler () {
     const instance = this
 
     return function (this: Transform, chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback) {
@@ -133,12 +133,13 @@ export class Implode {
 
         callback(null, output)
       } catch (e: unknown) {
+        // eslint-disable-next-line n/no-callback-literal
         callback(e as Error)
       }
     }
   }
 
-  #onInputFinished(callback: TransformCallback) {
+  #onInputFinished (callback: TransformCallback) {
     this.#streamEnded = true
 
     try {
@@ -153,11 +154,12 @@ export class Implode {
 
       callback(null, this.#outputBuffer.read())
     } catch (e: unknown) {
+      // eslint-disable-next-line n/no-callback-literal
       callback(e as Error)
     }
   }
 
-  #processChunkData() {
+  #processChunkData () {
     if (this.#dictionarySizeMask === -1) {
       this.#setup()
     }
@@ -177,16 +179,16 @@ export class Implode {
 
       // -------------------------------
 
-      let endOfLastMatch = 0 // used when searching for longer repetitions later
+      const endOfLastMatch = 0 // used when searching for longer repetitions later
 
       while (this.#startIndex < this.#inputBuffer.size()) {
-        let { size, distance } = findRepetitions(
+        const { size, distance } = findRepetitions(
           this.#inputBuffer.read(endOfLastMatch),
           endOfLastMatch,
-          this.#startIndex,
+          this.#startIndex
         )
 
-        let isFlushable = this.#isRepetitionFlushable(size, distance)
+        const isFlushable = this.#isRepetitionFlushable(size, distance)
 
         if (isFlushable === false) {
           const byte = this.#inputBuffer.readByte(this.#startIndex)
@@ -264,7 +266,7 @@ export class Implode {
    * @returns true - flushable
    * @returns null - flushable, but there might be a better repetition
    */
-  #isRepetitionFlushable(size: number, distance: number) {
+  #isRepetitionFlushable (size: number, distance: number) {
     if (size === 0) {
       return false
     }
@@ -287,7 +289,7 @@ export class Implode {
    * repetitions are at least 2 bytes long,
    * so the initial 2 bytes can be moved to the output as is
    */
-  #handleFirstTwoBytes() {
+  #handleFirstTwoBytes () {
     const byte1 = this.#inputBuffer.readByte(0)
     const byte2 = this.#inputBuffer.readByte(1)
     this.#outputBits(this.#nChBits[byte1], this.#nChCodes[byte1])
@@ -295,7 +297,7 @@ export class Implode {
     this.#startIndex += 2
   }
 
-  #setup() {
+  #setup () {
     switch (this.#dictionarySize) {
       case DictionarySize.Large:
         this.#dictionarySizeMask = nBitsOfOnes(6)
@@ -310,6 +312,7 @@ export class Implode {
 
     switch (this.#compressionType) {
       case Compression.Binary:
+        // eslint-disable-next-line no-case-declarations
         let nChCode = 0
         for (let nCount = 0; nCount < 0x100; nCount++) {
           this.#nChBits[nCount] = 9
@@ -341,7 +344,7 @@ export class Implode {
     this.#outBits = 0
   }
 
-  #outputBits(nBits: number, bitBuffer: number) {
+  #outputBits (nBits: number, bitBuffer: number) {
     if (nBits > 8) {
       this.#outputBits(8, bitBuffer)
       bitBuffer = bitBuffer >> 8

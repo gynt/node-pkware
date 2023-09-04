@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer'
+import { Buffer, TranscodeEncoding as BufferEncoding } from 'buffer'
 import { Transform, TransformCallback } from 'stream'
 import {
   ChBitsAsc,
@@ -12,7 +12,7 @@ import {
   LenBase,
   LenBits,
   LenCode,
-  LITERAL_END_STREAM,
+  LITERAL_END_STREAM
 } from './constants'
 import { AbortedError, InvalidCompressionTypeError, InvalidDictionarySizeError } from './errors'
 import { ExpandingBuffer } from './ExpandingBuffer'
@@ -36,7 +36,7 @@ const readHeader = (buffer: Buffer) => {
 
   return {
     compressionType: compressionType as Compression,
-    dictionarySize: dictionarySize as DictionarySize,
+    dictionarySize: dictionarySize as DictionarySize
   }
 }
 
@@ -81,8 +81,9 @@ export class Explode {
   #bitBuffer: number = 0
   #backupData: { extraBits: number; bitBuffer: number } = {
     extraBits: -1,
-    bitBuffer: -1,
+    bitBuffer: -1
   }
+
   #lengthCodes: number[] = generateDecodeTables(LenCode, LenBits)
   #distPosCodes: number[] = generateDecodeTables(DistCode, DistBits)
   #inputBuffer: ExpandingBuffer
@@ -97,13 +98,13 @@ export class Explode {
   #asciiTable2E34: number[] = repeat(0, 0x80)
   #asciiTable2EB4: number[] = repeat(0, 0x100)
 
-  constructor(config: Config = {}) {
+  constructor (config: Config = {}) {
     this.#verbose = config?.verbose ?? false
     this.#inputBuffer = new ExpandingBuffer(config?.inputBufferSize ?? 0)
     this.#outputBuffer = new ExpandingBuffer(config?.outputBufferSize ?? 0)
   }
 
-  getHandler() {
+  getHandler () {
     const instance = this
 
     return function (this: Transform, chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback) {
@@ -143,17 +144,18 @@ export class Explode {
 
         callback(null, output)
       } catch (e: unknown) {
+        // eslint-disable-next-line n/no-callback-literal
         callback(e as Error)
       }
     }
   }
 
-  #generateAsciiTables() {
+  #generateAsciiTables () {
     this.#chBitsAsc = ChBitsAsc.map((value, index) => {
       if (value <= 8) {
         this.#asciiTable2C34 = mergeSparseArrays(
           populateAsciiTable(value, index, 0, 0x100),
-          this.#asciiTable2C34,
+          this.#asciiTable2C34
         ) as number[]
         return value - 0
       }
@@ -162,7 +164,7 @@ export class Explode {
       if (acc === 0) {
         this.#asciiTable2EB4 = mergeSparseArrays(
           populateAsciiTable(value, index, 8, 0x100),
-          this.#asciiTable2EB4,
+          this.#asciiTable2EB4
         ) as number[]
         return value - 8
       }
@@ -172,21 +174,21 @@ export class Explode {
       if (getLowestNBits(6, acc) === 0) {
         this.#asciiTable2E34 = mergeSparseArrays(
           populateAsciiTable(value, index, 6, 0x80),
-          this.#asciiTable2E34,
+          this.#asciiTable2E34
         ) as number[]
         return value - 6
       }
 
       this.#asciiTable2D34 = mergeSparseArrays(
         populateAsciiTable(value, index, 4, 0x100),
-        this.#asciiTable2D34,
+        this.#asciiTable2D34
       ) as number[]
 
       return value - 4
     })
   }
 
-  #onInputFinished(callback: TransformCallback) {
+  #onInputFinished (callback: TransformCallback) {
     if (this.#verbose) {
       console.log('---------------')
       console.log('explode: total number of chunks read:', this.#stats.chunkCounter)
@@ -205,7 +207,7 @@ export class Explode {
   /**
    * @throws {@link AbortedError} when there isn't enough data to be wasted
    */
-  #wasteBits(numberOfBits: number) {
+  #wasteBits (numberOfBits: number) {
     if (numberOfBits > this.#extraBits && this.#inputBuffer.isEmpty()) {
       throw new AbortedError()
     }
@@ -226,7 +228,7 @@ export class Explode {
   /**
    * @throws {@link AbortedError}
    */
-  #decodeNextLiteral() {
+  #decodeNextLiteral () {
     const lastBit = getLowestNBits(1, this.#bitBuffer)
 
     this.#wasteBits(1)
@@ -291,7 +293,7 @@ export class Explode {
   /**
    * @throws {@link AbortedError}
    */
-  #decodeDistance(repeatLength: number) {
+  #decodeDistance (repeatLength: number) {
     const distPosCode = this.#distPosCodes[getLowestNBits(8, this.#bitBuffer)]
     const distPosBits = DistBits[distPosCode]
 
@@ -313,7 +315,7 @@ export class Explode {
     return distance + 1
   }
 
-  #processChunkData() {
+  #processChunkData () {
     if (this.#inputBuffer.isEmpty()) {
       return
     }
@@ -366,7 +368,7 @@ export class Explode {
     }
   }
 
-  #parseInitialData() {
+  #parseInitialData () {
     if (this.#inputBuffer.size() < 4) {
       return false
     }
@@ -391,13 +393,13 @@ export class Explode {
     return true
   }
 
-  #backup() {
+  #backup () {
     this.#backupData.extraBits = this.#extraBits
     this.#backupData.bitBuffer = this.#bitBuffer
     this.#inputBuffer.saveIndices()
   }
 
-  #restore() {
+  #restore () {
     this.#extraBits = this.#backupData.extraBits
     this.#bitBuffer = this.#backupData.bitBuffer
     this.#inputBuffer.restoreIndices()

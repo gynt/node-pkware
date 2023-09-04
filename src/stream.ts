@@ -3,18 +3,19 @@ import { promisify } from 'util'
 import { isFunction } from './functions'
 import { ExpandingBuffer } from './ExpandingBuffer'
 import { EMPTY_BUFFER } from './constants'
+import { Buffer, TranscodeEncoding as BufferEncoding } from 'buffer'
 
 class QuasiTransform {
   #handler: (this: Transform, chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback) => void
   _flush?: (callback: TransformCallback) => void
 
-  constructor(
-    handler: (this: Transform, chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback) => void,
+  constructor (
+    handler: (this: Transform, chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback) => void
   ) {
     this.#handler = handler
   }
 
-  handle(chunk: Buffer, encoding: BufferEncoding): Promise<Buffer> {
+  handle (chunk: Buffer, encoding: BufferEncoding): Promise<Buffer> {
     return promisify(this.#handler).call(this, chunk, encoding)
   }
 }
@@ -85,10 +86,10 @@ export const transformEmpty = () => {
  * @returns a Transform stream instance
  */
 export const through = (
-  handler: (this: Transform, chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback) => void,
+  handler: (this: Transform, chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback) => void
 ) => {
   return new Transform({
-    transform: handler,
+    transform: handler
   })
 }
 
@@ -100,7 +101,7 @@ export const through = (
 export const transformSplitBy = (
   predicate: (chunk: Buffer) => [Buffer, Buffer, boolean],
   leftHandler: (this: Transform, chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback) => void,
-  rightHandler: (this: Transform, chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback) => void,
+  rightHandler: (this: Transform, chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback) => void
 ) => {
   let isFirstChunk = true
   let wasLeftFlushCalled = false
@@ -208,13 +209,13 @@ export const transformSplitBy = (
 export const toBuffer = (done: (buffer: Buffer) => void) => {
   const buffer = new ExpandingBuffer()
   return new Writable({
-    write(chunk, encoding, callback) {
+    write (chunk, encoding, callback) {
       buffer.append(chunk)
       callback()
     },
-    final(callback) {
-      done(buffer.getHeap())
+    final (callback) {
+      done(buffer.getActualData())
       callback()
-    },
+    }
   })
 }

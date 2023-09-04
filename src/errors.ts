@@ -4,7 +4,7 @@
  * - `explode` when it encounters invalid data in the header section (the first 2 bytes of a compressed files)
  */
 export class InvalidDictionarySizeError extends Error {
-  constructor() {
+  constructor () {
     super('Invalid dictionary size')
     this.name = 'InvalidDictionarySizeError'
   }
@@ -16,7 +16,7 @@ export class InvalidDictionarySizeError extends Error {
  * - `explode` when it encounters invalid data in the header section (the first 2 bytes of a compressed files)
  */
 export class InvalidCompressionTypeError extends Error {
-  constructor() {
+  constructor () {
     super('Invalid compression type')
     this.name = 'InvalidCompressionTypeError'
   }
@@ -29,7 +29,7 @@ export class InvalidCompressionTypeError extends Error {
  * Pkware compressed files have 2 bytes header followed by at lest 2 bytes of data and an end literal.
  */
 export class InvalidDataError extends Error {
-  constructor() {
+  constructor () {
     super('Invalid data')
     this.name = 'InvalidDataError'
   }
@@ -40,7 +40,7 @@ export class InvalidDataError extends Error {
  * - `explode` when compressed data ends without reaching the end literal or in mid decompression
  */
 export class AbortedError extends Error {
-  constructor() {
+  constructor () {
     super('Aborted')
     this.name = 'AbortedError'
   }
