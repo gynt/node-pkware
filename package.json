@@ -30,6 +30,7 @@
   "dependencies": {
     "buffer": "^6.0.3",
     "minimist-lite": "^2.2.1",
+    "readable-stream": "^4.4.2",
     "stream-browserify": "^3.0.0",
     "util": "^0.12.5"
   },
